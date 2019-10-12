@@ -1,19 +1,18 @@
 #![no_std]
 #![no_main]
 
+use core::fmt::Write;
 use core::panic::PanicInfo;
-
-static WELCOME: &[u8] = b"Typoos";
+use typhoos::vga_buffer::Writer;
 
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
-    let vga_buffer = 0xb8000 as *mut u8;
+    let mut writer = Writer::new();
 
-    for (i, &byte) in WELCOME.iter().enumerate() {
-        unsafe {
-            *vga_buffer.add(i * 2) = byte;
-            *vga_buffer.add(i * 2 + 1) = 0xb;
-        }
+    writeln!(writer, "Typoos 0.1.0 {}", 2019).unwrap();
+    writeln!(writer, "Hello, World").unwrap();
+    for i in 0..20 {
+        writeln!(writer, "line: {}", i).unwrap();
     }
 
     loop {}
