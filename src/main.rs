@@ -3,7 +3,7 @@
 
 use core::fmt::Write;
 use core::panic::PanicInfo;
-use typhoos::vga_buffer::Writer;
+use typhoos::display::vga_buffer::Writer;
 
 #[no_mangle]
 pub extern "C" fn _start() -> ! {

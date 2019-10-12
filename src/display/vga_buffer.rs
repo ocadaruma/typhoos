@@ -1,5 +1,5 @@
+use crate::util::volatile::Volatile;
 use core::fmt;
-use core::ptr;
 
 const BUFFER_HEIGHT: usize = 25;
 const BUFFER_WIDTH: usize = 80;
@@ -36,7 +36,7 @@ struct ScreenChar {
 }
 
 struct Buffer {
-    chars: [[ScreenChar; BUFFER_WIDTH]; BUFFER_HEIGHT],
+    chars: [[Volatile<ScreenChar>; BUFFER_WIDTH]; BUFFER_HEIGHT],
 }
 
 pub struct Writer {
@@ -67,12 +67,10 @@ impl Writer {
 
                 let color_code = self.color_code;
 
-                unsafe {
-                    ptr::write_volatile(&mut self.buffer.chars[row][col], ScreenChar {
-                        ascii_char: byte,
-                        color_code,
-                    });
-                }
+                self.buffer.chars[row][col].write(ScreenChar {
+                    ascii_char: byte,
+                    color_code,
+                });
                 self.column_pos += 1;
             }
         }
@@ -81,22 +79,16 @@ impl Writer {
     fn new_line(&mut self) {
         for row in 1..BUFFER_HEIGHT {
             for col in 0..BUFFER_WIDTH {
-                let screen_char = unsafe {
-                    ptr::read_volatile(&self.buffer.chars[row][col])
-                };
-                unsafe {
-                    ptr::write_volatile(&mut self.buffer.chars[row - 1][col], screen_char);
-                }
+                let screen_char = self.buffer.chars[row][col].read();
+                self.buffer.chars[row - 1][col].write(screen_char);
             }
         }
 
         for col in 0..BUFFER_WIDTH {
-            unsafe {
-                ptr::write_volatile(&mut self.buffer.chars[BUFFER_HEIGHT - 1][col], ScreenChar {
-                    ascii_char: b' ',
-                    color_code: self.color_code,
-                });
-            }
+            self.buffer.chars[BUFFER_HEIGHT - 1][col].write(ScreenChar {
+                ascii_char: b' ',
+                color_code: self.color_code,
+            });
         }
         self.column_pos = 0;
     }
