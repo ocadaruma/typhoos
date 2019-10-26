@@ -7,7 +7,10 @@
 
 #![feature(asm)]
 
+#[macro_use]
 pub mod display;
+#[macro_use]
+pub mod serial;
 pub mod util;
 
 #[macro_use]
@@ -18,7 +21,7 @@ use core::panic::PanicInfo;
 
 #[cfg(test)]
 fn test_runner(tests: &[&dyn Fn()]) {
-    println!("Running {} tests", tests.len());
+    serial_println!("Running {} tests", tests.len());
     for test in tests {
         test();
     }
@@ -40,9 +43,19 @@ pub extern "C" fn _start() -> ! {
     loop {}
 }
 
+#[cfg(not(test))]
 #[panic_handler]
-fn panic(_info: &PanicInfo) -> ! {
-    println!("{}", _info);
+fn panic(info: &PanicInfo) -> ! {
+    println!("{}", info);
+    loop {}
+}
+
+#[cfg(test)]
+#[panic_handler]
+fn panic(info: &PanicInfo) -> ! {
+    serial_println!("[failed]");
+    serial_println!("Error: {}\n", info);
+    exit_qemu(QemuExitCode::Failed);
     loop {}
 }
 
@@ -50,6 +63,8 @@ fn panic(_info: &PanicInfo) -> ! {
 mod tests {
     #[test_case]
     fn trivial() {
+        serial_print!("trivial assertion... ");
         assert_eq!(1, 1);
+        serial_println!("[ok]");
     }
 }
