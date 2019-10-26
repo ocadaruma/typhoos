@@ -1,18 +1,15 @@
 #![no_std]
 #![no_main]
 
-use core::fmt::Write;
 use core::panic::PanicInfo;
-use typhoos::display::vga_buffer::Writer;
+use typhoos::println;
 
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
-    let mut writer = Writer::new();
-
-    writeln!(writer, "Typoos 0.1.0 {}", 2019).unwrap();
-    writeln!(writer, "Hello, World").unwrap();
+    println!("Typoos 0.1.0 {}", 2019);
+    println!("Hello, World");
     for i in 0..20 {
-        writeln!(writer, "line: {}", i).unwrap();
+        println!("line: {}", i);
     }
 
     loop {}
@@ -20,6 +17,6 @@ pub extern "C" fn _start() -> ! {
 
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
-    loop {
-    }
+    println!("{}", _info);
+    loop {}
 }
